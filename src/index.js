@@ -1,106 +1,142 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { render } from 'react-dom';
 import {
   ApolloClient,
   InMemoryCache,
   ApolloProvider,
   gql,
-  useQuery,
-  NetworkStatus,
-  useLazyQuery
+  useMutation,
+  useQuery
 } from "@apollo/client";
 
 
 
 const client = new ApolloClient({
-  uri: "https://71z1g.sse.codesandbox.io/",
+  uri: "https://sxewr.sse.codesandbox.io/",
   cache: new InMemoryCache()
 });
 
-const GET_DOGS = gql`
-    query getDogs {
-        dogs {
+
+const GET_TODOS = gql`
+    {
+        todos {
             id
-            breed
+            type
         }
     }
 `;
 
-const GET_DOG_PHOTO = gql`
-    query Dog($breed: String!) {
-        dog(breed: $breed) {
+const ADD_TODO = gql`
+    mutation AddTodo($type: String!) {
+        addTodo(type: $type) {
             id
-            displayImage
+            type
         }
     }
 `;
 
+const UPDATE_TODO = gql`
+    mutation UpdateTodo($id: String!, $type: String!) {
+        updateTodo(id: $id, type: $type) {
+            id
+            type
+        }
+    }
+`;
 
-function Dogs({ onDogSelected }) {
-    const { loading, error, data } = useQuery(GET_DOGS);
-    
-    if (loading) return `loading... (spinny wheel)`;
-    if (error) return `Sorry, there was an error`;
-    
-    return (
-        <select name="dog" onChange={onDogSelected}>
-           {data.dogs.map(dog => (
-               <option key={dog.id} value={dog.breed}>
-                   {dog.breed}
-               </option>
-           ))}
-        </select>
-    );
-}
+function Todos() {
+    const { loading, error, data } = useQuery(GET_TODOS);
+    const [updateTodo, { loading: mutationLoading, error: mutationError }] = useMutation(UPDATE_TODO);
 
+    if (loading) return <p>Loading your data now</p>;
+    if (error) return <p>Sorry, there was an error</p>;
 
-function DogPhoto({ breed }) {
-    const { loading, error, data, refetch, networkStatus } = useQuery(GET_DOG_PHOTO, {
-        variables: { breed },
-        // pollInterval: 1000,
-        notifyOnNetworkStatusChange: true
+    return data.todos.map(({ id, type }) => {
+        let input;
+
+        return (
+            <div key={id}>
+                <p>{type}</p>
+                <form 
+                    onSubmit={event => {
+                    event.preventDefault();
+                    updateTodo({ variables: { id, type: input.value }});
+                    input.value = '';
+                }}>
+                <input
+                    ref={node => {
+                        input = node;
+                    }} 
+                />
+                <button type="submit">
+                    Update Todo
+                </button>
+                </form>
+                {mutationLoading && <p>Loading</p>}
+                {mutationError && <p>Error</p>}
+            </div>
+        );
     });
-
-    if (networkStatus === NetworkStatus.refetch) return 'Refetching as we speak!';
-    if (loading) return null;
-    if (error) return `No Doggo picture here due to ${error} error`;
-
-    return ( 
-        <div>
-            <img src={data.dog.displayImage} style={{ height: 200, width: 200 }} alt="dog" />
-            <button onClick={() => refetch()}>Refetch New Dog Photo</button>
-        </div>
-    );
 }
 
 
-// function DelayedQuery() {
-//     const [getDog, { loading, data }] = useLazyQuery(GET_DOG_PHOTO);
+function AddTodo() {
+    let input;
+    const [addTodo] = useMutation(ADD_TODO, {
+      update(
+        cache,
+        {
+          data: { addTodo }
+        }
+      ) {
+        cache.modify({
+          fields: {
+            todos(existingTodos = []) {
+              const newTodoRef = cache.writeFragment({
+                data: addTodo,
+                fragment: gql`
+                  fragment NewTodo on Todo {
+                    id
+                    type
+                  }
+                `
+              });
+              return existingTodos.concat(newTodoRef);
+            }
+          }
+        });
+      }
+    });
+  
+    return (
+      <div>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            addTodo({ variables: { type: input.value } });
+            input.value = "";
+          }}
+        >
+          <input
+            ref={node => {
+              input = node;
+            }}
+          />
+          <button type="submit">Add Todo</button>
+        </form>
+      </div>
+    );
+  }
 
-//     if (loading) return <p>We're Loading now</p>;
-
-//     return (
-//         <div>
-//             {data && data.dog && <img src={data.dog.displayImage} /> }
-//             <button onClick={() => getDog({ variables: { breed: "bulldog" }})}>Click it!</button>
-//         </div>
-//     );
-// }
 
 
 
 function App() {
-    const [selectedDog, setSelectedDog] = useState(null);
-
-    function onDogSelected({ target }) {
-        setSelectedDog(target.value)
-    }
-
   return (
     <div>
-      <h2>Doggos via Apollo/GraphQL <span role="img" aria-label="rocket">🚀</span></h2>
-      <Dogs onDogSelected={onDogSelected} />
-      {selectedDog && <DogPhoto breed={selectedDog} />}
+      <h2>ToDo List with Apollo/GraphQL <span role="img" aria-label="rocket">🚀</span></h2>
+      <AddTodo />
+      <Todos />
     </div>
   );
 }
