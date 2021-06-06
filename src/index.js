@@ -3,48 +3,74 @@ import { render } from 'react-dom';
 import {
   ApolloClient,
   InMemoryCache,
-  ApolloProvider,
-  useQuery,
-  gql
+  ApolloProvider
 } from "@apollo/client";
+import { gql, useQuery } from '@apollo/client';
+
 
 const client = new ApolloClient({
-  uri: 'https://48p1r2roz4.sse.codesandbox.io',
+  uri: "https://71z1g.sse.codesandbox.io/",
   cache: new InMemoryCache()
 });
 
-
-const EXCHANGE_RATES = gql`
-  query GetExchangeRates {
-    rates(currency: "USD") {
-      currency
-      rate
+const GET_DOGS = gql`
+    query getDogs {
+        dogs {
+            id
+            breed
+        }
     }
-  }
 `;
 
-function ExchangeRates() {
 
-    const { loading, error, data } = useQuery(EXCHANGE_RATES);
-  
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error :(</p>;
-    // MAP THROUGH CURRENCY DATA
-    return data.rates.map(({ currency, rate }) => (
-      <div key={currency}>
-        <p>
-          {currency}: {rate}
-        </p>
-      </div>
-    ));
-  }
+// const EXCHANGE_RATES = gql`
+//   query GetExchangeRates {
+//     rates(currency: "USD") {
+//       currency
+//       rate
+//     }
+//   }
+// `;
+
+function Dogs({ onDogSelected }) {
+    const { loading, error, data } = useQuery(GET_DOGS);
+    
+    if (loading) return `loading... (spinny wheel)`;
+    if (error) return `Sorry, there was an error`;
+    
+    return (
+        <select name="dog" onChange={onDogSelected}>
+           {data.dogs.map(dog => (
+               <option key={dog.id} value={dog.breed}>
+                   {dog.breed}
+               </option>
+           ))}
+        </select>
+    );
+}
+
+
+// function ExchangeRates() {
+//     const { loading, error, data } = useQuery(EXCHANGE_RATES);
+//     if (loading) return <p>Loading...</p>;
+//     if (error) return <p>Error :(</p>;
+//     // MAP THROUGH CURRENCY DATA
+//     return data.rates.map(({ currency, rate }) => (
+//       <div key={currency}>
+//         <p>
+//           {currency}: {rate}
+//         </p>
+//       </div>
+//     ));
+//   }
   
 
 function App() {
   return (
     <div>
-      <h2>Currency Data via Apollo/GraphQL <span role="img" aria-label="rocket">🚀</span> -----&gt; <span role="img" aria-label="moon">🌕</span></h2>
-      <ExchangeRates />
+      <h2>Doggos via Apollo/GraphQL <span role="img" aria-label="rocket">🚀</span></h2>
+      {/* <ExchangeRates /> */}
+      <Dogs />
     </div>
   );
 }
