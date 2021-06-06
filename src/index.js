@@ -56,7 +56,7 @@ function Todos() {
 
         return (
             <div key={id}>
-                <p>{type}</p>
+                <p>{id}: {type}</p>
                 <form 
                     onSubmit={event => {
                     event.preventDefault();
