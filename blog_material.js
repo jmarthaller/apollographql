@@ -1,0 +1,1 @@
+console.log('Use me for your blog!')
