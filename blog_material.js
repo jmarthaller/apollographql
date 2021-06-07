@@ -1,1 +1,5 @@
-console.log('Use me for your blog!')
+
+
+const _ = require("lodash")
+
+_.delay(function() {console.log("Hello World!")}, 2000)
