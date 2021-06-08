@@ -2,8 +2,19 @@
 
 const _ = require("lodash")		
 	
-let i = 0;
-while (i <= 5) {
-    console.log(`While loop number: ${i}`);
-    i += 1;
-}
+let debouncer = _.debounce(() => {console.log('Function debounced after 1 second!');}, 1000);
+    
+debouncer();
+
+
+
+
+
+
+
+
+
+
+
+
+
