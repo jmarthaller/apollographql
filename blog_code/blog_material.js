@@ -1,11 +1,8 @@
 
 
-
 const _ = require("lodash")		
 	
-var obj = { 'a': 1, 'b': 2, 'c': 3 };
- 
-console.log(_.pick(obj, ['a', 'b']));
+console.log(_.chunk([2, 1, 2, 3, 3, 3, 6, 4, 6], 2));
 
 
 
